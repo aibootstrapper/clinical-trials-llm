@@ -69,3 +69,8 @@ def read_root(conversation: Conversation):
     response = clinical_trials_agent.run(conversation.message)
     print(response)
     return {"message": response}
+
+
+@app.get("/healtz")
+def healtz():
+    return {"status": "ok"}
