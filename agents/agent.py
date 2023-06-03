@@ -80,6 +80,7 @@ class Agent(BaseModel):
     def run_input(self, input: str) -> str:
         self.memory.append({"responder": "Human", "message": input})
         if self.condition is None:
+            self.condition = "pending"
             return f'{{"action": "AskForCondition", "input": "{input}"}}'
 
         else:
