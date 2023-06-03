@@ -33,7 +33,7 @@ class PatientAnswer(BaseModel):
 
 app = FastAPI()
 origins = [
-    "http://localhost:5173",  # local dev
+    "*",  # local dev
 ]
 app.add_middleware(
     CORSMiddleware,

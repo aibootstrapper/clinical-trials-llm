@@ -80,7 +80,6 @@ class Agent(BaseModel):
     def run_input(self, input: str) -> str:
         self.memory.append({"responder": "Human", "message": input})
         if self.condition is None:
-            self.condition = "pending"
             return f'{{"action": "AskForCondition", "input": "{input}"}}'
 
         else:
@@ -105,6 +104,7 @@ class Agent(BaseModel):
     def run(self, input: str) -> str:
         action = self.run_input(input)
         action_obj = json.loads(action)
+        print(action_obj)
         response = self.run_action(action_obj["action"], action_obj["input"])
 
         return response
