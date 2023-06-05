@@ -56,12 +56,6 @@ class AskNextQuestion(ToolInterface):
     description: str = "Used to follow up on a question that has already been asked, this should be used after the user answers a questions asked by the `ConditionExtractor` or `AskNextQuestion`. This tool should only be used if the user has already given you their condition."
 
     def use(self, input: str, agent: "Agent", **kwargs):
-        next_question = get_next_question(
-            agent.df_available_trials,
-            agent.df_cfg_parsed_trials,
-            agent.previous_questions,
-        )
-        agent.previous_questions.append(next_question)
         filtered_ids = filter_on_answer(
             agent.df_cfg_parsed_available_trials, next_question, input
         )
@@ -71,6 +65,13 @@ class AskNextQuestion(ToolInterface):
         agent.df_cfg_parsed_available_trials = filter_unmatched_trials(
             agent.df_cfg_parsed_trials, agent.df_clinical_trials
         )
+        next_question = get_next_question(
+            agent.df_available_trials,
+            agent.df_cfg_parsed_trials,
+            agent.previous_questions,
+        )
+        agent.previous_questions.append(next_question)
+
         if len(agent.df_available_trials) <= 10:
             return f"Here are the top {len(agent.df_available_trials)} trials that match your criteria:\n\n{list(agent.df_available_trials['#nct_id'])}"
 
