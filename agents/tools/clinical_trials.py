@@ -40,14 +40,14 @@ class ConditionExtractor(ToolInterface):
         agent.df_cfg_parsed_available_trials = filter_unmatched_trials(
             agent.df_cfg_parsed_trials, agent.df_clinical_trials
         )
-        next_question = get_next_question(
+        agent.next_question = get_next_question(
             agent.df_available_trials,
             agent.df_cfg_parsed_trials,
             agent.previous_questions,
         )
-        agent.previous_questions.append(next_question)
+        agent.previous_questions.append(agent.next_question)
         return agent.llm(
-            f"Ask a user with {agent.condition} this question but make it clear what unit the response should be in: {next_question}. Ask for the raw value, without units"
+            f"Ask a user with {agent.condition} this question but make it clear what unit the response should be in: {agent.next_question}. Ask for the raw value, without units"
         )
 
 
@@ -57,7 +57,7 @@ class AskNextQuestion(ToolInterface):
 
     def use(self, input: str, agent: "Agent", **kwargs):
         filtered_ids = filter_on_answer(
-            agent.df_cfg_parsed_available_trials, next_question, input
+            agent.df_cfg_parsed_available_trials, agent.next_question, input
         )
         agent.df_available_trials = agent.df_available_trials[
             agent.df_available_trials["#nct_id"].isin(filtered_ids)
@@ -65,16 +65,16 @@ class AskNextQuestion(ToolInterface):
         agent.df_cfg_parsed_available_trials = filter_unmatched_trials(
             agent.df_cfg_parsed_trials, agent.df_clinical_trials
         )
-        next_question = get_next_question(
+        agent.next_question = get_next_question(
             agent.df_available_trials,
             agent.df_cfg_parsed_trials,
             agent.previous_questions,
         )
-        agent.previous_questions.append(next_question)
+        agent.previous_questions.append(agent.next_question)
 
         if len(agent.df_available_trials) <= 10:
             return f"Here are the top {len(agent.df_available_trials)} trials that match your criteria:\n\n{list(agent.df_available_trials['#nct_id'])}"
 
         return agent.llm(
-            f"Ask a user with {agent.condition} this question but make it clear what units the response should be in: {next_question}. Show a couple examples of what a good response would look like. Ask for the raw value, without units"
+            f"Ask a user with {agent.condition} this question but make it clear what units the response should be in: {agent.next_question}. Show a couple examples of what a good response would look like. Ask for the raw value, without units"
         )
