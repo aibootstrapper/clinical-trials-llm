@@ -60,19 +60,11 @@ class Agent(BaseModel):
 
     @property
     def tool_descriptions(self):
-        return "\n".join(
-            [
-                f"{tool.name}: {tool.description}"
-                for tool in self.tools
-                if tool.name != "AskForCondition"
-            ]
-        )
+        return "\n".join([f"{tool.name}: {tool.description}" for tool in self.tools])
 
     @property
     def tool_names(self):
-        return ", ".join(
-            [tool.name for tool in self.tools if tool.name != "AskForCondition"]
-        )
+        return ", ".join([tool.name for tool in self.tools])
 
     @property
     def tool_by_names(self):
@@ -80,21 +72,16 @@ class Agent(BaseModel):
 
     def run_input(self, input: str) -> str:
         self.memory.append({"responder": "Human", "message": input})
-        if self.condition is None:
-            self.condition = "pending"
-            return f'{{"action": "AskForCondition", "input": "{input}"}}'
 
-        else:
-            prompt = self.prompt_template.format(
-                tool_descriptions=self.tool_descriptions,
-                tool_names=self.tool_names,
-                input=input,
-                condition_set=self.condition is not None
-                and self.condition != "pending",
-                memory=self.memory,
-            )
-            response = self.llm(prompt)
-            return response
+        prompt = self.prompt_template.format(
+            tool_descriptions=self.tool_descriptions,
+            tool_names=self.tool_names,
+            input=input,
+            condition_set=self.condition is not None and self.condition != "pending",
+            memory=self.memory,
+        )
+        response = self.llm(prompt)
+        return response
 
     def run_action(self, action: str, action_input: str) -> str:
         tool = self.tool_by_names[action]
@@ -135,8 +122,5 @@ if __name__ == "__main__":
 
     while True:
         user_input = input("User input: ")
-        action = agent.run(user_input)
-        action_obj = json.loads(action)
-        print(action_obj)
-        output = agent.run_action(action_obj["action"], action_obj["input"])
+        output = agent.run(user_input)
         print(output)

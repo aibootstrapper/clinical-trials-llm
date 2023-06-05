@@ -12,7 +12,9 @@ class AskForCondition(ToolInterface):
     description: str = "Always use this tool first. If the user has not told you their condition, use this tool to ask them for it."
 
     def use(self, input: str, agent: "Agent", **kwargs):
-        return "What condition would you like to search clinical trials for?"
+        return agent.llm(
+            f"Respond to the user message: {input}. Then ask the user what kind of cancer doe it want to search trials for."
+        )
 
 
 class NormalResponse(ToolInterface):
@@ -47,7 +49,7 @@ class ConditionExtractor(ToolInterface):
         )
         agent.previous_questions.append(agent.next_question)
         return agent.llm(
-            f"Ask a user with {agent.condition} this question but make it clear what unit the response should be in: {agent.next_question}. Ask for the raw value, without units"
+            f"Ask a user with {agent.condition} this question but make it clear what unit the response should be in: {agent.next_question}. Ask for the raw value, without units. Just ask the question, don't `I'm sorry to hear about your diagnosis`."
         )
 
 
@@ -65,16 +67,22 @@ class AskNextQuestion(ToolInterface):
         agent.df_cfg_parsed_available_trials = filter_unmatched_trials(
             agent.df_cfg_parsed_trials, agent.df_clinical_trials
         )
-        agent.next_question = get_next_question(
-            agent.df_available_trials,
-            agent.df_cfg_parsed_trials,
-            agent.previous_questions,
-        )
-        agent.previous_questions.append(agent.next_question)
+        try:
+            agent.next_question = get_next_question(
+                agent.df_available_trials,
+                agent.df_cfg_parsed_trials,
+                agent.previous_questions,
+            )
+
+            agent.previous_questions.append(agent.next_question)
+        except IndexError:
+            return agent.llm(
+                f"Here are the top {len(agent.df_available_trials)} trials that match your criteria:\n\n{list(agent.df_available_trials['#nct_id'])}"
+            )
 
         if len(agent.df_available_trials) <= 10:
             return f"Here are the top {len(agent.df_available_trials)} trials that match your criteria:\n\n{list(agent.df_available_trials['#nct_id'])}"
 
         return agent.llm(
-            f"Ask a user with {agent.condition} this question but make it clear what units the response should be in: {agent.next_question}. Show a couple examples of what a good response would look like. Ask for the raw value, without units"
+            f"Ask a user with {agent.condition} this question but make it clear what units the response should be in: {agent.next_question}. Show a couple examples of what a good response would look like. Ask for the raw value, without units. Just ask the question, don't `I'm sorry to hear about your diagnosis`"
         )
