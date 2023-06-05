@@ -54,6 +54,7 @@ class Agent(BaseModel):
     )
     df_available_trials: Optional[pd.DataFrame] = None
     df_cfg_parsed_available_trials: Optional[pd.DataFrame] = None
+    next_question: Optional[str] = None
     previous_questions: List[str] = []
     memory: List[Mapping] = []
 
